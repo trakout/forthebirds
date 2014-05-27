@@ -13,16 +13,11 @@
 
     </head>
     <body>
-
-
         <div class="other misc">
             This is for the birds. v1.0<br />
             <hr /><br /><br /><br />
         </div>
-
-
         <div class="pic"></div>
-        
 
         <div class="twitterdiv"></div>
         <div class="datein"></div>
