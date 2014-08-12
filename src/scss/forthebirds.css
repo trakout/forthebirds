@@ -1,0 +1,16 @@
+.insertftb {
+    overflow: hidden;
+}
+.insertftb, ul.ftb, ul.ftb li ul, li.ftb {
+    width: 275px;
+    height: 100px;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+li.ftb {
+    padding-right: 25px;
+    float: left;
+    padding-bottom: 25px;
+}
+
