@@ -18,8 +18,9 @@
         var datecount = 0;
 
         var settings = $.extend({
-            user: 'trakout',        // default is trakout, can be any twitter user
-            fetch: '5',             // Amount of total tweets to grab. Max is 200, default is 20
+            user: 'pgerochi',        // default is trakout, can be any twitter user
+            fetch: '22',             // Amount of total tweets to grab. Max is 200, default is 20
+            getUser: 'true',
             count: '1',             // How many tweets to show at once. Default is 2
             avatar: 'false',        // default is false; true if you want user profile pic to show
             avatarlocation: null,   // class of div to insert profile pic into. default is null (avatar will insert above tweets)
@@ -27,7 +28,7 @@
             loadtext: null,         // Text to show while loading tweets, eg. 'Loading Tweets...'
             transition: 'slide',    // Transition between tweets. Default is 'slide'. Other options are 'fade', and 'slideup'
             timer: '4000',          // Transition timings
-            date: 'false',          // Show a relative time like "2 minutes ago"
+            date: 'true',           // Show a relative time like "2 minutes ago"
             datelocation: null      // class of div to insert date into. default is null (date will insert above tweets)
         }, options);
 
@@ -62,221 +63,47 @@
             console.log('Something Went Wrong. Check your dependancies.');
         }
 
-        function rightSlide() {
-
-            if (settings.fetch == settings.count) {
-                slidePoint--;
-            }
-            if (settings.transition === 'fade') {
-                $('ul.ftb').animate({'opacity':'0'}, function() {
-                    $('ul.ftb').animate({'margin-left':'-' + (slidePoint*(singleWidth)) + 'px'}, 200, function() {
-                        $('ul.ftb').animate({'opacity':'1'});
-                    });
-                });
-            }
-            else if (settings.transition === 'slideup') {
-                $('li.ftb').css('float', 'none');
-
-                if (runOnce === 0) {
-                    topArr = $('ul.ftb li.ftb:eq(0)').height() - (-($('li.ftb').css('padding-bottom').replace('px', '')));
-                    runOnce = 1;
-                }
-
-                $('ul.ftb').animate({'margin-top':'' + (-(topArr) * (slidePoint)) + 'px'});
-            }
-            else {
-                $('ul.ftb').animate({'margin-left':(slidePoint*(singleWidth)) + 'px'});
-            }
-
-            if (slidePoint >= (slideCount - 1)) {
-                //reset back to beginning
-                slidePoint = -1;
-            }
-
-            if (settings.date != 'false') {
-                //grab and put into an array
-                // for (var ik = 0; ik < dateArr.length; ik++) {
-                //     console.log(dateArr[ik]);
-                // }
-                if (settings.datelocation != null) {
-                    // insert the date to the defined div
-                    $('.datestamp').animate({'opacity':'0'}, function() {
-                        $('.datestamp').html(timeAgo(dateArr[datecount]));
-                        $('.datestamp').animate({'opacity':'1'});
-                    });
-                }
-                else {
-                    // leave the time stamp below the tweet somewhere..
-                    $('.datestamp').animate({'opacity':'0'}, function() {
-                        $('.datestamp').html(timeAgo(dateArr[datecount]));
-                        $('.datestamp').animate({'opacity':'1'});
-                    });
-                }
-                datecount++;
-                if (datecount == dateArr.length) {
-                    datecount = 0;
-                }
-            }
-
-            slidePoint++;
-
-        }
-
-        function slider() {
-            singleWidth = (($('ul.ftb').css('width').replace('px', '')) -(-($('li.ftb').css('padding-right').replace('px', ''))));
-            slideWidth = singleWidth * (parseInt(settings.fetch));
-            $('ul.ftb').css('width', slideWidth + 'px');
-            $('.insertftb').fadeIn();
-
-             if (settings.date != 'false') {
-                if (settings.datelocation == null) {
-                    //getting ready for the date insert
-                    $(shotgun).append('<div class="datestamp"></div>');
-                    $('.datestamp').animate({'opacity':'0'}, function() {
-                        $('.datestamp').html(timeAgo(dateArr[datecount]));
-                        $('.datestamp').animate({'opacity':'1'});
-                    });
-                }
-                else {
-                    $('.' + settings.datelocation).append('<div class="datestamp"></div>');
-                    $('.datestamp').animate({'opacity':'0'}, function() {
-                        $('.datestamp').html(timeAgo(dateArr[datecount]));
-                        $('.datestamp').animate({'opacity':'1'});
-                    });
-                }
-            }
-            
-            var timer = window.setInterval(rightSlide, parseInt(settings.timer));
+        function parseTwitter(text) {
+  
+            text = text.replace(/[A-Za-z]+:\/\/[A-Za-z0-9-_]+\.[A-Za-z0-9-_:%&\?\/.=]+/, function(uri) {
+            return uri.link(uri);
+            });
+             
+           
+            text = text.replace(/[@]+[A-Za-z0-9-_]+/, function(u) {
+            var username = u.replace("@","")
+            return u.link("http://twitter.com/"+username);
+            });
+             
+        
+            text = text.replace(/[#]+[A-Za-z0-9-_]+/, function(t) {
+            var tag = t.replace("#","%23")
+            return t.link("http://search.twitter.com/search?q="+tag);
+            });
+            return text;
         }
 
         function loadinsert(result) {
             var resultArr = $.parseJSON(result);
-            var point = 1;
 
-            //is there a date to take care of?
-            if (settings.date != 'false') {
-                if (settings.avatar != 'false') {
-                    var iterLength = (resultArr.length - 2);
-                    dateArr = resultArr[(resultArr.length - 2)];
+
+            for (var i = 0; i < resultArr.length; i++) {
+
+
+                if (i === 0) {
+                    infoinsert = '<div class="item active"><div class="username"><a href="https://twitter.com/' + resultArr[i].user.screen_name + '" target="_blank" title="' + resultArr[i].user.screen_name + '">@' + resultArr[i].user.screen_name + '</a><div class="time-ago">'+timeAgo(resultArr[i].created_at)+'</div></div><div class="tweet">' + parseTwitter(resultArr[i].text) + '</div></</div>';
+                    $('.carousel-inner').append(infoinsert);
+                } else {
+                    infoinsert = '<div class="item"><div class="username"><a href="https://twitter.com/' + resultArr[i].user.screen_name + '" target="_blank" title="' + resultArr[i].user.screen_name + '">@' + resultArr[i].user.screen_name + '</a><div class="time-ago">'+timeAgo(resultArr[i].created_at)+'</div></div><div class="tweet">' + parseTwitter(resultArr[i].text) + '</div></</div>';
+                    $('.carousel-inner').append(infoinsert);
                 }
-                else {
-                    var iterLength = (resultArr.length - 1);
-                    dateArr = resultArr[(resultArr.length - 1)];
-                }
             }
-            else {
-                var iterLength = resultArr.length;
-            }
-
-            for (var c = 0; c < iterLength; c++) {
-
-                if (c < parseInt(settings.fetch)) {
-                    // tweets
-                    if (((parseInt(settings.count)) === 1) || ((parseInt(settings.count)) === null)) {
-                        // just one tweet per slide
-                        if (c === 0) {
-                            slideCount++;
-                            infoinsert = '<ul class="ftb pane"><li class="ftb slide"><div class="ftb tweet">' + resultArr[c] + '</div></li>';
-                        }
-                        else if (c == ((parseInt(settings.fetch)) - 1)) {
-                            slideCount++;
-                            infoinsert = infoinsert + '<li class="ftb slide"><div class="ftb tweet">' + resultArr[c] + '</div></li></ul>';
-                        }
-                        else {
-                            slideCount++;
-                            infoinsert = infoinsert + '<li class="ftb slide"><div class="ftb tweet">' + resultArr[c] + '</div></li>';
-                        }
-                    }
-                    else {
-                        // multiple tweets per slide
-                        if (point == 1) {
-                            if (c === 0) {
-                                // very first slide
-                                slideCount++;
-                                infoinsert = '<ul class="ftb pane"><li class="ftb slide"><ul><li><div class="ftb tweet">' + resultArr[c] + '</div></li>' + settings.divider;
-                            }
-                            else {
-                                if (c === ((parseInt(settings.fetch)) - 1)) {
-                                    //the off chance we need the very last slide
-                                    infoinsert = infoinsert + '<li class="ftb slide"><ul><li><div class="ftb tweet">' + resultArr[c] + '</div></li></ul></li></ul>';
-                                }
-                                else {
-                                    slideCount++;
-                                    // first of other panes
-                                    infoinsert = infoinsert + '<li class="ftb slide"><ul><li><div class="ftb tweet">' + resultArr[c] + '</div></li>' + settings.divider;
-                                }
-                            }
-                        }
-                        else if (point === (parseInt(settings.count))) {
-                            
-                            // close it off
-                            if (c === ((parseInt(settings.fetch)) - 1)) {
-                                //very last slide
-                                infoinsert = infoinsert + '<li class="ftb slide"><div class="ftb tweet">' + resultArr[c] + '</div></li></ul></li></ul>';
-                            }
-                            else {
-                                //last pane
-                                infoinsert = infoinsert + '<li class="ftb slide"><div class="ftb tweet">' + resultArr[c] + '</div></li></ul>';
-                                point = 0;
-                            }
-                        }
-                        else {
-                            // add to the slide (middle somewhere)
-
-                            if (c === ((parseInt(settings.fetch)) - 1)) {
-                                //the off chance we need the very last slide
-                                infoinsert = infoinsert + '<li class="ftb slide"><div class="ftb tweet">' + resultArr[c] + '</div></li></ul></li></ul>';
-                            }
-                            else {
-                                infoinsert = infoinsert + '<li class="ftb slide"><div class="ftb tweet">' + resultArr[c] + '</div></li>' + settings.divider;
-                            }
-                        }
-                    }
-                    point++;
-                }
-                // else {
-                //     // avatar
-                //     if (settings.date != 'false') {
-                //         profilepic = resultArr[resultArr.length];
-                //         console.log(profilepic);
-                //     }
-                //     else {
-                //         profilepic = resultArr[resultArr.length];
-                //         console.log(profilepic);
-                //     }
-                // }
-            }
-
-            if (settings.date != 'false') {
-                if (settings.avatar != 'false') {
-                    profilepic = resultArr[(resultArr.length - 1)];
-                }
-                else {
-                    profilepic = '';
-                }
-
-            }
-            else {
-                profilepic = resultArr[(resultArr.length - 1)];
-            }
-            
-            // after it's all over, let's append.
-            shotgun.html('<div style="display: none;" class="insertftb"></div>');
-            if (settings.avatarlocation === null) {
-                $('.insertftb').append(profilepic);
-            }
-            else {
-                $('.' + settings.avatarlocation).html(profilepic);
-            }
-
-            $('.insertftb').append(infoinsert);
-            slider();
         }
 
         $.ajax({
           url: 'js/php/twitteroauth/forthebirds.php',
           type: 'get',
-          data: {user:settings.user,fetch:settings.fetch,avatar:settings.avatar,date:settings.date},
+          data: {user:settings.user,fetch:settings.fetch,avatar:settings.avatar,date:settings.date, getUser:settings.getUser},
           error: failure,
           success: function(resultsbro) {
                 loadinsert(resultsbro);
